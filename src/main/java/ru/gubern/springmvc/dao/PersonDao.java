@@ -1,47 +1,43 @@
 package ru.gubern.springmvc.dao;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import ru.gubern.springmvc.mapper.PersonMapper;
 import ru.gubern.springmvc.models.Person;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class PersonDao {
 
-    private static final String URL = "jdbc:postgresql://localhost:5433/first_db";
-    private static final String USERNAME = "postgresql";
-    private static final String PASSWORD = "postgresql";
-    private static final String DRIVER = "org.postgresql.Driver";
-    //TODO 22/10/2024 18:04
-    private static Connection connection;
+    private final JdbcTemplate jdbcTemplate;
 
-    static {
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    @Autowired
+    public PersonDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Person> index() throws SQLException {
-        List<Person> people = new ArrayList<>();
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from Person");
-        while (resultSet.next()){
-            Person person = new Person();
-            person.setId(resultSet.getInt("id"));
-            person.setName(resultSet.getString("name"));
+    public List<Person> index() {
+        return jdbcTemplate.query("select * from Person", new PersonMapper());
+    }
 
-            people.add(person);
-        }
-        return people;
+    public Person show(int id) {
+        return jdbcTemplate.query("select * from Person where id=?", new Object[]{id}, new BeanPropertyRowMapper<>(Person.class))
+                .stream().findAny().orElse(null);
+    }
+
+    public void save(Person person) {
+        jdbcTemplate.update("INSERT INTO Person Values (1,?,?,?)", person.getName(), person.getAge(), person.getEmail());
+    }
+
+    public void update(int id, Person updatedPerson) {
+        jdbcTemplate.update("UPDATE person set name=?, age=?,email=? where id = ?", updatedPerson.getName(),
+                updatedPerson.getAge(), updatedPerson.getEmail(), id);
+    }
+
+    public void delete(int id) {
+        jdbcTemplate.update("delete from person where  id = ?", id);
     }
 }

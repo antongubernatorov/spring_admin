@@ -1,18 +1,19 @@
 package ru.gubern.springmvc.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.gubern.springmvc.dao.PersonDao;
 import ru.gubern.springmvc.models.Person;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @Controller
 @RequestMapping("/people")
 public class PeopleController {
-
     private final PersonDao personDAO;
 
     @Autowired
@@ -21,13 +22,13 @@ public class PeopleController {
     }
 
     @GetMapping()
-    public String index(Model model) {
+    public String index(Model model) throws SQLException {
         model.addAttribute("people", personDAO.index());
         return "people/index";
     }
 
     @GetMapping("/{id}")
-    public String show(@PathVariable("id") int id, Model model) {
+    public String show(@PathVariable("id") int id, Model model) throws SQLException {
         model.addAttribute("person", personDAO.show(id));
         return "people/show";
     }
@@ -44,7 +45,7 @@ public class PeopleController {
     }
 
     @GetMapping("/{id}/edit")
-    public String edit(Model model, @PathVariable("id") int id) {
+    public String edit(@PathVariable("id") int id,Model model) {
         model.addAttribute("person", personDAO.show(id));
         return "people/edit";
     }
