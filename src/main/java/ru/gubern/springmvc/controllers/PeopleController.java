@@ -1,12 +1,15 @@
 package ru.gubern.springmvc.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.gubern.springmvc.dao.PersonDao;
 import ru.gubern.springmvc.models.Person;
+import ru.gubern.springmvc.util.PersonValidator;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -15,10 +18,12 @@ import java.util.List;
 @RequestMapping("/people")
 public class PeopleController {
     private final PersonDao personDAO;
+    private PersonValidator personValidator;
 
     @Autowired
-    public PeopleController(PersonDao personDAO) {
+    public PeopleController(PersonDao personDAO, PersonValidator personValidator) {
         this.personDAO = personDAO;
+        this.personValidator = personValidator;
     }
 
     @GetMapping()
@@ -39,7 +44,10 @@ public class PeopleController {
     }
 
     @PostMapping()
-    public String create(@ModelAttribute("person") Person person) {
+    public String create(@ModelAttribute("person") @Valid Person person, BindingResult result) {
+
+        personValidator.validate(person, result);
+
         personDAO.save(person);
         return "redirect:/people";
     }
@@ -51,7 +59,10 @@ public class PeopleController {
     }
 
     @PatchMapping("/{id}")
-    public String update(@ModelAttribute("person") Person person, @PathVariable("id") int id) {
+    public String update(@ModelAttribute("person") Person person, @PathVariable("id") int id, BindingResult bindingResult) {
+
+        personValidator.validate(person, bindingResult);
+
         personDAO.update(id, person);
         return "redirect:/people";
     }
